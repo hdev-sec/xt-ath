@@ -1,4 +1,4 @@
-module git.extark.com/go-modules/gin-auth.git
+module extark/gin-auth
 
 go 1.25.0
 

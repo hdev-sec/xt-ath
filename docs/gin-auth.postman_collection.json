@@ -1,0 +1,712 @@
+{
+  "info": {
+    "_postman_id": "gin-auth-collection-v1",
+    "name": "gin-auth",
+    "description": "Authentication API for gin-auth module.\n\nBase URL: `{{baseUrl}}`\n\n**Authentication**: Protected endpoints require a Bearer token in the `Authorization` header. Login or Signup to auto-populate `{{accessToken}}` and `{{refreshToken}}` collection variables.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Public",
+      "item": [
+        {
+          "name": "Signup",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('accessToken', body.access_token);",
+                  "    pm.collectionVariables.set('refreshToken', body.refresh_token);",
+                  "    pm.test('Signup successful', () => pm.response.to.have.status(201));",
+                  "    pm.test('Access token returned', () => pm.expect(body.access_token).to.be.a('string'));",
+                  "    pm.test('Refresh token returned', () => pm.expect(body.refresh_token).to.be.a('string'));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"johndoe\",\n  \"password\": \"secret123\",\n  \"name\": \"John\",\n  \"surname\": \"Doe\",\n  \"email\": \"john.doe@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "signup"]
+            },
+            "description": "Creates a new user account and returns an access token and refresh token.\n\n**Returns**: `201 Created`\n```json\n{\n  \"user\": { ... },\n  \"access_token\": \"<jwt>\",\n  \"refresh_token\": \"<jwt>\"\n}\n```\n\nTokens are automatically saved to `{{accessToken}}` and `{{refreshToken}}` collection variables."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"user\": {\n    \"id\": 1,\n    \"username\": \"johndoe\",\n    \"roles\": [],\n    \"name\": \"John\",\n    \"surname\": \"Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"show_on_employee_list\": true,\n    \"can_manage_work_scheduled\": false,\n    \"can_manage_work_to_see\": false\n  },\n  \"access_token\": \"<jwt>\",\n  \"refresh_token\": \"<jwt>\"\n}",
+              "originalRequest": {
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"johndoe\",\n  \"password\": \"secret123\",\n  \"name\": \"John\",\n  \"surname\": \"Doe\",\n  \"email\": \"john.doe@example.com\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/signup",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "signup"]
+                }
+              }
+            },
+            {
+              "name": "400 Bad Request",
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"error\": \"Key: 'signupRequest.Email' Error:Field validation for 'Email' failed on the 'email' tag\"\n}",
+              "originalRequest": {
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"johndoe\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/signup",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "signup"]
+                }
+              }
+            },
+            {
+              "name": "409 Conflict",
+              "status": "Conflict",
+              "code": 409,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"error\": \"username or email already exists\"\n}",
+              "originalRequest": {
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"johndoe\",\n  \"password\": \"secret123\",\n  \"name\": \"John\",\n  \"surname\": \"Doe\",\n  \"email\": \"john.doe@example.com\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/signup",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "signup"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('accessToken', body.access_token);",
+                  "    pm.collectionVariables.set('refreshToken', body.refresh_token);",
+                  "    pm.test('Login successful', () => pm.response.to.have.status(200));",
+                  "    pm.test('Access token returned', () => pm.expect(body.access_token).to.be.a('string'));",
+                  "    pm.test('Refresh token returned', () => pm.expect(body.refresh_token).to.be.a('string'));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"johndoe\",\n  \"password\": \"secret123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Authenticates a user with username and password. Creates an access log entry on success.\n\n**Returns**: `200 OK`\n```json\n{\n  \"user\": { ... },\n  \"access_token\": \"<jwt>\",\n  \"refresh_token\": \"<jwt>\"\n}\n```\n\nTokens are automatically saved to `{{accessToken}}` and `{{refreshToken}}` collection variables."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"user\": {\n    \"id\": 1,\n    \"username\": \"johndoe\",\n    \"roles\": [],\n    \"name\": \"John\",\n    \"surname\": \"Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"show_on_employee_list\": true,\n    \"can_manage_work_scheduled\": false,\n    \"can_manage_work_to_see\": false\n  },\n  \"access_token\": \"<jwt>\",\n  \"refresh_token\": \"<jwt>\"\n}",
+              "originalRequest": {
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"johndoe\",\n  \"password\": \"secret123\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "login"]
+                }
+              }
+            },
+            {
+              "name": "401 Unauthorized",
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"error\": \"invalid credentials\"\n}",
+              "originalRequest": {
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"johndoe\",\n  \"password\": \"wrongpassword\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "login"]
+                }
+              }
+            },
+            {
+              "name": "403 Forbidden (deactivated account)",
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"error\": \"account is deactivated\"\n}",
+              "originalRequest": {
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"johndoe\",\n  \"password\": \"secret123\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "login"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('accessToken', body.access_token);",
+                  "    pm.collectionVariables.set('refreshToken', body.refresh_token);",
+                  "    pm.test('Token refreshed', () => pm.response.to.have.status(200));",
+                  "    pm.test('New access token returned', () => pm.expect(body.access_token).to.be.a('string'));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh"]
+            },
+            "description": "Exchanges a valid refresh token for a new access token and refresh token pair.\n\n**Returns**: `200 OK`\n```json\n{\n  \"access_token\": \"<jwt>\",\n  \"refresh_token\": \"<jwt>\"\n}\n```\n\nNew tokens are automatically saved to collection variables."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"access_token\": \"<new-jwt>\",\n  \"refresh_token\": \"<new-jwt>\"\n}",
+              "originalRequest": {
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refresh_token\": \"{{refreshToken}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/refresh",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "refresh"]
+                }
+              }
+            },
+            {
+              "name": "401 Unauthorized",
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"error\": \"invalid or expired refresh token\"\n}",
+              "originalRequest": {
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refresh_token\": \"expired-or-invalid-token\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/refresh",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "refresh"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Protected",
+      "description": "Endpoints that require a valid Bearer token in the `Authorization` header.\n\nRun **Login** or **Signup** first to populate `{{accessToken}}` automatically.",
+      "item": [
+        {
+          "name": "Validate Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Token is valid', () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    pm.test('user_id present', () => pm.expect(body.user_id).to.be.a('number'));",
+                  "    pm.test('username present', () => pm.expect(body.username).to.be.a('string'));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/validate",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "validate"]
+            },
+            "description": "Validates the Bearer token and returns the claims embedded in it.\n\n**Returns**: `200 OK`\n```json\n{\n  \"user_id\": 1,\n  \"username\": \"johndoe\",\n  \"roles\": [\"admin\"]\n}\n```"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"user_id\": 1,\n  \"username\": \"johndoe\",\n  \"roles\": []\n}",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/validate",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "validate"]
+                }
+              }
+            },
+            {
+              "name": "401 Unauthorized",
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"error\": \"missing or invalid token\"\n}",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/validate",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "validate"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Logout successful', () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "    pm.collectionVariables.set('accessToken', '');",
+                  "    pm.collectionVariables.set('refreshToken', '');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            },
+            "description": "Closes the most recent access log entry for the authenticated user (sets `exit_time` to now). Clears `{{accessToken}}` and `{{refreshToken}}` collection variables on success.\n\n**Returns**: `200 OK`\n```json\n{\n  \"message\": \"logged out\"\n}\n```"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"message\": \"logged out\"\n}",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/logout",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "logout"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Deactivate Account",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Account deactivated', () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "    pm.collectionVariables.set('accessToken', '');",
+                  "    pm.collectionVariables.set('refreshToken', '');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/deactivate",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "deactivate"]
+            },
+            "description": "Sets `archived_at` on the authenticated user's account, preventing future logins.\n\n**Warning**: This action is not reversible via the API. The account can no longer be used to log in after deactivation.\n\n**Returns**: `200 OK`\n```json\n{\n  \"message\": \"account deactivated\"\n}\n```"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"message\": \"account deactivated\"\n}",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/deactivate",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "deactivate"]
+                }
+              }
+            },
+            {
+              "name": "404 Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"error\": \"user not found or already deactivated\"\n}",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/deactivate",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "deactivate"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Access Log",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Access log updated', () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    pm.test('ID present', () => pm.expect(body.id).to.be.a('number'));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"exit_time\": \"2025-01-15T18:00:00Z\",\n  \"reason\": \"End of shift\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/access-log/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "access-log", "1"]
+            },
+            "description": "Updates an existing access log entry by ID. At least one of `exit_time` or `reason` must be provided. The `modified_by_id` is set to the authenticated user's ID automatically.\n\n**Path parameter**: `:id` — the access log entry ID\n\n**Body** (all fields optional, but at least one required):\n```json\n{\n  \"exit_time\": \"2025-01-15T18:00:00Z\",\n  \"reason\": \"End of shift\"\n}\n```\n\n**Returns**: `200 OK` — the updated access log entry."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"id\": 1,\n  \"user_id\": 1,\n  \"entry_time\": \"2025-01-15T09:00:00Z\",\n  \"exit_time\": \"2025-01-15T18:00:00Z\",\n  \"reason\": \"End of shift\",\n  \"is_all_day\": false,\n  \"created_at\": \"2025-01-15T09:00:00Z\",\n  \"modified_at\": \"2025-01-15T18:30:00Z\",\n  \"modified_by_id\": 1\n}",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"exit_time\": \"2025-01-15T18:00:00Z\",\n  \"reason\": \"End of shift\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/access-log/1",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "access-log", "1"]
+                }
+              }
+            },
+            {
+              "name": "400 Bad Request (no fields)",
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"error\": \"no fields to update\"\n}",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/access-log/1",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "access-log", "1"]
+                }
+              }
+            },
+            {
+              "name": "404 Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"error\": \"access log not found\"\n}",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reason\": \"test\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/access-log/9999",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "access-log", "9999"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
