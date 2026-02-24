@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+  pull_request:
+    branches: [master]
+
+jobs:
+  # ─── Test ──────────────────────────────────────────────────────────────────
+  # Runs on every push / PR. GitHub-hosted ubuntu-latest already has Docker,
+  # so testcontainers can spin up a real PostgreSQL instance for E2E tests.
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+
+      - name: Build
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        env:
+          TESTCONTAINERS_RYUK_DISABLED: "true"
+        run: go test ./auth/ -v -timeout 180s -count=1
+
+  # ─── Publish ───────────────────────────────────────────────────────────────
+  # Publishes the Go module as a GitHub Release with module zip, go.mod,
+  # go.sum, and version.info as assets.
+  #
+  # Triggers on:
+  #   • every push to master  (auto-generates a pseudo-version, pre-release)
+  #   • every semver tag push (uses the tag as version, e.g. v1.2.3)
+  #
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+
+      - name: Determine version
+        id: version
+        run: |
+          if [[ "${GITHUB_REF}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            VERSION="${GITHUB_REF_NAME}"
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          else
+            VERSION="v0.0.0-$(date -u +%Y%m%d%H%M%S)-$(git rev-parse --short HEAD)"
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Package module
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          MODULE_PATH=$(go list -m)
+          ARCHIVE_PREFIX="${MODULE_PATH}@${VERSION}"
+
+          # Build Go module zip (standard format: module@version/…)
+          WORK=$(mktemp -d)
+          mkdir -p "${WORK}/${ARCHIVE_PREFIX}"
+          git archive HEAD | tar -x -C "${WORK}/${ARCHIVE_PREFIX}"
+          ( cd "${WORK}" && zip -qr "${GITHUB_WORKSPACE}/module.zip" "${ARCHIVE_PREFIX}" )
+
+          # Create .info metadata
+          printf '{"Version":"%s","Time":"%s"}' \
+            "${VERSION}" "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" > version.info
+
+          echo "Packaged ${MODULE_PATH}@${VERSION}"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          PRERELEASE="${{ steps.version.outputs.prerelease }}"
+
+          PRERELEASE_FLAG=""
+          if [ "${PRERELEASE}" = "true" ]; then
+            PRERELEASE_FLAG="--prerelease"
+          fi
+
+          gh release create "${VERSION}" \
+            ${PRERELEASE_FLAG} \
+            --title "${VERSION}" \
+            --notes "Go module release ${VERSION}" \
+            module.zip \
+            go.mod \
+            go.sum \
+            version.info
+
+          echo "Published gin-auth@${VERSION}"
