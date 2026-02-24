@@ -1,0 +1,97 @@
+stages:
+  - test
+  - publish
+
+variables:
+  GOPATH: "${CI_PROJECT_DIR}/.go"
+
+# ─── Test ────────────────────────────────────────────────────────────────────
+# Runs on every push / MR. Uses Docker-in-Docker so testcontainers can
+# spin up a real PostgreSQL instance for the E2E tests.
+test:
+  stage: test
+  image: golang:1.25
+  services:
+    - name: docker:27-dind
+      alias: docker
+  variables:
+    DOCKER_HOST: "tcp://docker:2375"
+    DOCKER_TLS_CERTDIR: ""
+    TESTCONTAINERS_HOST_OVERRIDE: "docker"
+    TESTCONTAINERS_RYUK_DISABLED: "true"
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq docker.io > /dev/null 2>&1
+  script:
+    - go build ./...
+    - go vet ./...
+    - go test ./auth/ -v -timeout 180s -count=1
+  cache:
+    key: go-mod-${CI_COMMIT_REF_SLUG}
+    paths:
+      - .go/pkg/mod/
+
+# ─── Publish ─────────────────────────────────────────────────────────────────
+# Publishes the Go module to the GitLab generic package registry.
+#
+# Triggers on:
+#   • every push to master  (auto-generates a pseudo-version)
+#   • every semver tag push (uses the tag as version, e.g. v1.2.3)
+#
+# Usage from consumers:
+#   curl --header "PRIVATE-TOKEN: <token>" \
+#     "${CI_API_V4_URL}/projects/<id>/packages/generic/gin-auth/v1.0.0/module.zip" \
+#     -o module.zip
+publish:
+  stage: publish
+  image: golang:1.25-alpine
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master"
+    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
+  before_script:
+    - apk add --no-cache zip curl git
+  script:
+    - |
+        # ── Determine version ──
+        if echo "${CI_COMMIT_TAG}" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+          VERSION="${CI_COMMIT_TAG}"
+        else
+          VERSION="v0.0.0-$(date -u +%Y%m%d%H%M%S)-${CI_COMMIT_SHORT_SHA}"
+        fi
+        echo "Publishing version ${VERSION}"
+
+        MODULE_PATH=$(go list -m)
+        PACKAGE_NAME="gin-auth"
+        ARCHIVE_PREFIX="${MODULE_PATH}@${VERSION}"
+
+        # ── Build Go module zip (standard format: module@version/…) ──
+        WORK=$(mktemp -d)
+        mkdir -p "${WORK}/${ARCHIVE_PREFIX}"
+        git archive HEAD | tar -x -C "${WORK}/${ARCHIVE_PREFIX}"
+        ( cd "${WORK}" && zip -qr /tmp/module.zip "${ARCHIVE_PREFIX}" )
+
+        # ── Create .info metadata ──
+        printf '{"Version":"%s","Time":"%s"}' \
+          "${VERSION}" "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" > /tmp/version.info
+
+        # ── Upload to GitLab Package Registry ──
+        REGISTRY="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${PACKAGE_NAME}/${VERSION}"
+
+        upload() {
+          echo "  uploading $2"
+          curl --fail --silent --show-error \
+               --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+               --upload-file "$1" \
+               "${REGISTRY}/$2"
+          echo ""
+        }
+
+        upload /tmp/module.zip   "module.zip"
+        upload go.mod            "go.mod"
+        upload go.sum            "go.sum"
+        upload /tmp/version.info "version.info"
+
+        echo "Published ${PACKAGE_NAME}@${VERSION}"
+  cache:
+    key: go-mod-${CI_COMMIT_REF_SLUG}
+    paths:
+      - .go/pkg/mod/
