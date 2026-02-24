@@ -4,7 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"git.extark.com/go-modules/gin-auth.git/auth/models"
+	"extark/gin-auth/auth/models"
+
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -16,10 +17,10 @@ const (
 // Claims represents the JWT claims used by this module.
 type Claims struct {
 	jwt.RegisteredClaims
-	UserID    uint            `json:"user_id"`
-	Username  string          `json:"username"`
+	UserID    uint               `json:"user_id"`
+	Username  string             `json:"username"`
 	Roles     models.StringArray `json:"roles"`
-	TokenType string          `json:"token_type"`
+	TokenType string             `json:"token_type"`
 }
 
 // GenerateAccessToken creates a signed access JWT for the given user.

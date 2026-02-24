@@ -3,7 +3,8 @@ package auth
 import (
 	"time"
 
-	"git.extark.com/go-modules/gin-auth.git/auth/models"
+	"extark/gin-auth/auth/models"
+
 	"gorm.io/gorm"
 )
 

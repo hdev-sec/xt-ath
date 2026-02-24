@@ -4,7 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"git.extark.com/go-modules/gin-auth.git/auth/models"
+	"extark/gin-auth/auth/models"
+
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"

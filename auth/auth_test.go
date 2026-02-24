@@ -10,7 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"git.extark.com/go-modules/gin-auth.git/auth"
+	"extark/gin-auth/auth"
+
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
