@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"xt-ath/auth/models"
+	"github.com/hdev-sec/xt-ath/auth/models"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"

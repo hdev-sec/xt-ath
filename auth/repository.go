@@ -3,7 +3,7 @@ package auth
 import (
 	"time"
 
-	"xt-ath/auth/models"
+	"github.com/hdev-sec/xt-ath/auth/models"
 
 	"gorm.io/gorm"
 )

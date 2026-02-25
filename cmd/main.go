@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"xt-ath/auth"
+	"github.com/hdev-sec/xt-ath/auth"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"

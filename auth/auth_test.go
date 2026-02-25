@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"xt-ath/auth"
+	"github.com/hdev-sec/xt-ath/auth"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"

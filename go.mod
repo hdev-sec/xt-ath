@@ -1,4 +1,4 @@
-module xt-ath
+module github.com/hdev-sec/xt-ath
 
 go 1.25.0
 

@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"xt-ath/auth/models"
+	"github.com/hdev-sec/xt-ath/auth/models"
 
 	"github.com/gin-gonic/gin"
 )
