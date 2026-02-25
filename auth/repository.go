@@ -3,7 +3,7 @@ package auth
 import (
 	"time"
 
-	"extark/gin-auth/auth/models"
+	"xt-ath/auth/models"
 
 	"gorm.io/gorm"
 )

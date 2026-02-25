@@ -1,4 +1,4 @@
-module extark/gin-auth
+module xt-ath
 
 go 1.25.0
 

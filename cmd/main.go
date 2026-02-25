@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"extark/gin-auth/auth"
+	"xt-ath/auth"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"

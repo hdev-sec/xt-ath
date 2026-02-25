@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"extark/gin-auth/auth"
+	"xt-ath/auth"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"

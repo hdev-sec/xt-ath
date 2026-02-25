@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"extark/gin-auth/auth/models"
+	"xt-ath/auth/models"
 
 	"github.com/golang-jwt/jwt/v5"
 )
